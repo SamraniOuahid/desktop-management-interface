@@ -105,22 +105,114 @@ public class Affichage {
 
         // Add action listeners for buttons
         btnAjouter.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(ActionEvent e) {
-                // Code to add a student or filiere
+                JTextField cneField = new JTextField();
+                JTextField nomField = new JTextField();
+                JTextField prenomField = new JTextField();
+                JTextField adresseField = new JTextField();
+
+                Object[] message = {
+                    "CNE:", cneField,
+                    "Nom:", nomField,
+                    "Prenom:", prenomField,
+                    "Adresse:", adresseField,
+                };
+
+                int option = JOptionPane.showConfirmDialog(null, message, "Ajouter un étudiant", JOptionPane.OK_CANCEL_OPTION);
+                if (option == JOptionPane.OK_OPTION) {
+                    String cne = cneField.getText();
+                    String nom = nomField.getText();
+                    String prenom = prenomField.getText();
+                    String adresse = adresseField.getText();
+
+                    try (Connection conn = Connect.getConnection();
+                         Statement stmt = conn.createStatement()) {
+                        String query = "INSERT INTO etudiant (cne, nom, prenom, adresse) VALUES ('" + cne + "', '" + nom + "', '" + prenom + "', '" + adresse + "')";
+                        stmt.executeUpdate(query);
+                        modelEtudiant.addRow(new Object[]{cne, nom, prenom, adresse});
+                        JOptionPane.showMessageDialog(null, "Étudiant ajouté avec succès !");
+                    } catch (SQLException ex) {
+                        ex.printStackTrace();
+                        JOptionPane.showMessageDialog(null, "Erreur lors de l'ajout : " + ex.getMessage());
+                    }
+                }
             }
         });
+
 
         btnSupprimer.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(ActionEvent e) {
-                // Code to delete a student or filiere
+                int selectedRow = table.getSelectedRow();
+                if (selectedRow != -1) {
+                    String cne = modelEtudiant.getValueAt(selectedRow, 0).toString();
+
+                    try (Connection conn = Connect.getConnection();
+                         Statement stmt = conn.createStatement()) {
+                        String query = "DELETE FROM etudiant WHERE cne = '" + cne + "'";
+                        stmt.executeUpdate(query);
+                        modelEtudiant.removeRow(selectedRow);
+                        JOptionPane.showMessageDialog(null, "Étudiant supprimé avec succès !");
+                    } catch (SQLException ex) {
+                        ex.printStackTrace();
+                        JOptionPane.showMessageDialog(null, "Erreur lors de la suppression : " + ex.getMessage());
+                    }
+                } else {
+                    JOptionPane.showMessageDialog(null, "Veuillez sélectionner une ligne à supprimer !");
+                }
             }
         });
 
+
         btnModifier.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(ActionEvent e) {
-                // Code to modify a student or filiere
+                int selectedRow = table.getSelectedRow();
+                if (selectedRow != -1) {
+                    String cne = modelEtudiant.getValueAt(selectedRow, 0).toString();
+                    String nom = modelEtudiant.getValueAt(selectedRow, 1).toString();
+                    String prenom = modelEtudiant.getValueAt(selectedRow, 2).toString();
+                    String adresse = modelEtudiant.getValueAt(selectedRow, 3).toString();
+
+                    JTextField nomField = new JTextField(nom);
+                    JTextField prenomField = new JTextField(prenom);
+                    JTextField adresseField = new JTextField(adresse);
+
+                    Object[] message = {
+                        "Nom:", nomField,
+                        "Prenom:", prenomField,
+                        "Adresse:", adresseField,
+                    };
+
+                    int option = JOptionPane.showConfirmDialog(null, message, "Modifier un étudiant", JOptionPane.OK_CANCEL_OPTION);
+                    if (option == JOptionPane.OK_OPTION) {
+                        String newNom = nomField.getText();
+                        String newPrenom = prenomField.getText();
+                        String newAdresse = adresseField.getText();
+
+                        try (Connection conn = Connect.getConnection();
+                             Statement stmt = conn.createStatement()) {
+                            String query = "UPDATE etudiant SET nom = '" + newNom + "', prenom = '" + newPrenom + "', adresse = '" + newAdresse + "' WHERE cne = '" + cne + "'";
+                            stmt.executeUpdate(query);
+
+                            // Mettre à jour le tableau
+                            modelEtudiant.setValueAt(newNom, selectedRow, 1);
+                            modelEtudiant.setValueAt(newPrenom, selectedRow, 2);
+                            modelEtudiant.setValueAt(newAdresse, selectedRow, 3);
+
+                            JOptionPane.showMessageDialog(null, "Étudiant modifié avec succès !");
+                        } catch (SQLException ex) {
+                            ex.printStackTrace();
+                            JOptionPane.showMessageDialog(null, "Erreur lors de la modification : " + ex.getMessage());
+                        }
+                    }
+                } else {
+                    JOptionPane.showMessageDialog(null, "Veuillez sélectionner une ligne à modifier !");
+                }
             }
         });
+
 
         btnImprimer.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
